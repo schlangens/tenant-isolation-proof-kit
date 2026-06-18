@@ -17,7 +17,10 @@ export async function boot() {
   const reuse = process.env.PGK_REUSE === '1';
   const port = parseInt(process.env.PGK_PORT || '', 10) || (5500 + Math.floor(Math.random() * 400));
   const dataDir = process.env.PGK_DATADIR || fs.mkdtempSync(path.join(os.tmpdir(), 'pgdata-'));
-  const epg = new EmbeddedPostgres({ databaseDir: dataDir, user: 'postgres', password: 'postgres', port, persistent: reuse });
+  // Postgres refuses to run as root; in root/CI environments let embedded-postgres
+  // create an unprivileged user so `npm run prove` works on a fresh clone anywhere.
+  const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+  const epg = new EmbeddedPostgres({ databaseDir: dataDir, user: 'postgres', password: 'postgres', port, persistent: reuse, createPostgresUser: asRoot });
   if (!reuse) await epg.initialise();
   await epg.start();
 

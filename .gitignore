@@ -1,0 +1,7 @@
+node_modules/
+*.pdf
+.env
+.env.*
+*.log
+.pgdata/
+.data/
